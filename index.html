@@ -497,12 +497,17 @@
   }
   function pad(n) { return String(n).padStart(2,'0'); }
 
-  // ── Filter records by date ──
+  // ── Filter records by date (converts UTC to local date) ──
+  function rawToLocalYMD(raw) {
+    if (!raw) return null;
+    const d = new Date(raw);
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
   function filtered() {
     return allRecords.filter(r => {
       const raw = r.fields['Data do voto'];
       if (!raw) return true;
-      const day = raw.slice(0, 10);
+      const day = rawToLocalYMD(raw);
       if (dateFrom && day < dateFrom) return false;
       if (dateTo   && day > dateTo)   return false;
       return true;
@@ -514,7 +519,7 @@
     const recs = filtered();
 
     // Count unique game dates
-    const days = new Set(recs.map(r => (r.fields['Data do voto'] || '').slice(0,10)).filter(Boolean));
+    const days = new Set(recs.map(r => rawToLocalYMD(r.fields['Data do voto'])).filter(Boolean));
 
     // Sum scores per player (exclude self-vote: voter's own column = 10)
     const totals = {};
