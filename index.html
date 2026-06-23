@@ -427,7 +427,21 @@
   const TOKEN   = 'patgBozsUliw8KNne.e3eab974dca822ccd024eb6cb2ccfccdd18aa917e0e8c0c6fbdbb419334e3ef7';
   const BASE_ID = 'appoTtZSOgrcEIsA1';
   const TABLE_ID= 'tblRtfPOsi2zmUtCZ';
-  const PLAYERS = ['Marcos','Harry','Caruso','Bala','Lucas','Matheus','Felipe','Dmenor','Natan','Saymon'];
+  // Campos que NÃO são jogadores — adicione aqui se criar outros campos no Airtable
+  const NON_PLAYER_FIELDS = new Set(['Quem votou', 'Data do voto']);
+
+  // Detecta dinamicamente os jogadores a partir dos campos numéricos dos registros
+  function detectPlayers(records) {
+    const found = new Set();
+    records.forEach(r => {
+      Object.entries(r.fields).forEach(([key, val]) => {
+        if (!NON_PLAYER_FIELDS.has(key) && typeof val === 'number') {
+          found.add(key);
+        }
+      });
+    });
+    return [...found].sort();
+  }
 
   let allRecords = [];
   let dateFrom = null;
@@ -521,7 +535,10 @@
     // Count unique game dates
     const days = new Set(recs.map(r => rawToLocalYMD(r.fields['Data do voto'])).filter(Boolean));
 
-    // Sum scores per player (exclude self-vote: voter's own column = 10)
+    // Detecta jogadores dinamicamente a partir de todos os registros (não só os filtrados)
+    const PLAYERS = detectPlayers(allRecords);
+
+    // Sum scores per player
     const totals = {};
     const counts = {};
     PLAYERS.forEach(p => { totals[p] = 0; counts[p] = 0; });
